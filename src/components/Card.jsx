@@ -1,10 +1,44 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './../pages/style.css'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faEdit } from '@fortawesome/free-solid-svg-icons'
+import Swal from 'sweetalert2'
 
 const Card=(props)=>{
 
+    const [allData,setAllData] = useState(null)
+
+    const deleteModal=(value)=>{
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+          }).then((result) => {
+            if (result.isConfirmed) {                
+                Swal.fire(
+                    'Deleted!',
+                    'Your file has been deleted.',
+                    'success'
+                )
+            }
+            renderCard()
+        })
+    }
+
+    const editModal=()=>{
+        
+    }
+
+    useEffect(()=>{
+        setAllData(props.data)
+    },[])
+
     const renderCard=()=>{
-        return props.data.map((val,index)=>{
+        return allData.map((val,index)=>{
             return (
                 <div className='card-container' key={index}>
                     <div className="card-header">
@@ -35,11 +69,27 @@ const Card=(props)=>{
                             </div>
                         </div>
                     </div>
+                    {
+                        val.username === props.user?
+                        <div className="card-modify">
+                            <div className="card-edit" onClick={()=>editModal(index)}>
+                                <FontAwesomeIcon icon={faEdit} />                        
+                            </div>
+                            <div className="card-delete" onClick={()=>deleteModal(index)}>
+                                <b>X</b>
+                            </div>
+                        </div>
+                        :
+                        null
+                    }
                 </div>
             )
         })
     }
 
+    if(allData===null){
+        return <div>Loading</div>
+    }
 
     return (
         <>

@@ -1,13 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import './style.css'
-import {Link} from 'react-router-dom'
+import {Link, Redirect} from 'react-router-dom'
 import Header from '../components/Header';
 import Card from '../components/Card';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEdit } from '@fortawesome/free-solid-svg-icons'
-import Button from '../components/Button';
+import ButtonCustom from '../components/Button';
+import { 
+    Button, 
+    Modal, 
+    ModalHeader, 
+    ModalBody, 
+    ModalFooter, 
+    Form,
+    FormGroup, 
+    Label, 
+    Input
+} from 'reactstrap';
+import { connect } from 'react-redux';
 
-const Home=()=>{
+const Home=(props)=>{
 
     const [toggle,setToggle] = useState(false)
     const [data,setData] = useState([
@@ -40,12 +52,43 @@ const Home=()=>{
         }
     ])
 
-    useEffect(()=>{
-        if(toggle) console.log('open')
-        else console.log('closed')
-
+    const [inputStory,setInputStory] = useState({
+        username:'',
+        title: '',
+        image: '',
+        story: '',
+        date: '',
+        photo: '',
+        content: ''
     })
 
+    const onSubmitStory=()=>{
+        let getPhoto = data.filter((val)=>{
+            return props.Auth.username === val.username
+        })
+        if(inputStory.image === "" || inputStory.image.toLowerCase().indexOf("http") === -1 || inputStory.image.toLowerCase().indexOf("https") === -1){
+            inputStory.image = "https://i2.wp.com/saintif.com/wp-content/uploads/2020/08/gambar-pemandangan-yang-indah.png?fit=1600%2C1200&ssl=1"
+        }
+        let now = new Date()
+        inputStory.username = props.Auth.username
+        inputStory.photo = getPhoto[0].photo
+        inputStory.date = now.toString()
+        data.unshift(inputStory)
+        setToggle(false)
+        setInputStory({
+            username:'',
+            title: '',
+            image: '',
+            story: '',
+            date: '',
+            photo: '',
+            content: ''
+        })
+    }
+
+    useEffect(()=>{
+        console.log(inputStory)
+    })
 
     return (
         <div>
@@ -54,17 +97,54 @@ const Home=()=>{
                 <div className="home-container">
                     <div className="home-title">
                         <h4>Your Timeline</h4>
-                        <Button btnType='btn-primary' onClick={()=>setToggle(!toggle)}>
+                        <ButtonCustom btnType='btn-primary-custom' onClick={()=>setToggle(!toggle)}>
                         <FontAwesomeIcon icon={faEdit} /> Write your own?
-                        </Button>
+                        </ButtonCustom>
                     </div>
                     <div className="articles">
-                        <Card data={data}/>
+                        <Card data={data} user={props.Auth.username}/>
                     </div>
                 </div>
             </div>
+            <Modal isOpen={toggle} toggle={()=>setToggle(false)}>
+                {
+                    props.Auth.isLogin?
+                    <>
+                        <ModalHeader toggle={()=>setToggle(false)}>Write your story</ModalHeader>
+                        <ModalBody>
+                        <Form>
+                            <FormGroup>
+                                <Label>Title</Label>
+                                <Input onChange={e=>setInputStory({...inputStory,title:e.target.value})} type="text"/>
+                            </FormGroup>
+                            <FormGroup>
+                                <Label>Image</Label>
+                                <Input onChange={e=>setInputStory({...inputStory,image:e.target.value})} type="text"/>
+                            </FormGroup>
+                            <FormGroup>
+                                <Label>Story</Label>
+                                <Input onChange={e=>setInputStory({...inputStory,content:e.target.value})} type="textarea" style={{height:'200px'}}/>
+                            </FormGroup>
+                        </Form>
+                        </ModalBody>
+                        <ModalFooter>
+                        <Button color="primary" onClick={onSubmitStory}>Submit</Button>{' '}
+                        <Button color="secondary" onClick={()=>setToggle(false)}>Cancel</Button>
+                        </ModalFooter>
+                    </>
+                    :
+                    <Redirect to='/login'/>
+                }
+            </Modal>
         </div>
     )
 }
 
-export default Home
+const Mapstatetoprops=(state)=>{
+  return{
+      Auth:state.Auth,
+      User:state.User
+  }
+}
+
+export default connect(Mapstatetoprops)(Home)
